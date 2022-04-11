@@ -3,6 +3,8 @@ class Rocket extends Phaser.GameObjects.Sprite {
         super (scene, x, y, texture, frame);
     
         scene.add.existing(this);
+        this.isFiring = false;
+        this.moveSpeed = 5;
     }
 
     update(){
@@ -16,6 +18,22 @@ class Rocket extends Phaser.GameObjects.Sprite {
         }
         
         //firing
+        if (Phaser.Input.Keyboard.JustDown(keyF)){
+            this.isFiring = true;
+        }
+
+        if (this.isFiring && this.y >= borderUISize * 3 + borderPadding) {
+            this.y -= this.moveSpeed;
+        }
+
+        if (this.y <= borderUISize * 3 + borderPadding){
+            this.reset();
+        }
+    }
+
+    reset() {
+        this.isFiring = false;
+        this.y = game.config.height - borderUISize - borderPadding;
     }
 }
 
