@@ -4,10 +4,14 @@ class Play extends Phaser.Scene {
     }
 
     preload(){
+
+        //images
         this.load.image('starfield', 'assets/starfield.png');
         this.load.image('starfield_small', 'assets/starfield_small.png');
         this.load.image('rocket', './assets/rocket.png');
         this.load.image('spaceship', './assets/spaceship.png');
+
+        //animations
         this.load.spritesheet('explosion', './assets/explosion.png', {frameWidth: 64, frameHeight: 32, startFrame: 0, endFrame: 9});
     }
 
@@ -49,17 +53,49 @@ class Play extends Phaser.Scene {
         //scoreboard
         this.p1Score = 0;
         let scoreConfig = {
-            frontFamily
+            frontFamily: 'Courier',
+            fontSize: '28px',
+            backgroundColor: '#F3B141',
+            color: '#843605',
+            align: 'right',
+            padding: {
+                top: 5,
+                bottom: 5, 
+            },
+            fixedWidth: 100
         }
+        this.scoreLeft = this.add.text(borderUISize + borderPadding, borderUISize + borderPadding*2, this.p1Score, scoreConfig);
+
+        //end game
+        this.gameOver = false;
+
+        //countdown clock
+        scoreConfig.fixedWidth = 0;
+        this.clock = this.time.delayedCall(game.settings.gameTimer, () => {
+            this.add.text(game.config.width/2, game.config.height/2, 'GAME OVER', scoreConfig).setOrigin(0.5);
+            this.add.text(game.config.width/2, game.config.height/2 + 64, 'Press (R) to Restart or <- for Menu', scoreConfig).setOrigin(0.5);
+            this.gameOver = true;
+        }, null, this);
     }
     update(){
 
         //update objects
-        this.p1Rocket.update();
-        this.ship01.update();
-        this.ship02.update();
-        this.ship03.update();
+        if (!this.gameOver){
+            this.p1Rocket.update();
+            this.ship01.update();
+            this.ship02.update();
+            this.ship03.update();
+        }
 
+        if (this.gameOver && Phaser.Input.Keyboard.JustDown(keyLEFT)){
+            this.scene.start('menu');
+        }
+
+        //reset the game
+        if (this.gameOver && Phaser.Input.Keyboard.JustDown(keyR)){
+            this.scene.restart();
+        }
+        
         //move background
         this.starsLarge.tilePositionX -= 4;
         this.starsSmall.tilePositionX -= 2;
@@ -88,8 +124,8 @@ class Play extends Phaser.Scene {
     }
 
     shipExplode(ship){
+        this.sound.play('sfx_explosion', {volume: 0.6});
         ship.alpha = 0;
-
         let boom = this.add.sprite(ship.x, ship.y, 'explosion').setOrigin(0,0);
         boom.anims.play('explode');
         boom.on('animationcomplete', () => {
@@ -97,6 +133,8 @@ class Play extends Phaser.Scene {
             ship.alpha = 1;
             boom.destroy();
         });
+        this.p1Score += ship.points;
+        this.scoreLeft.text = this.p1Score;
+        
     }
-
 }
